@@ -9,9 +9,13 @@ export const authMiddleware = (req, res, next) => {
   if (!token) {
     return res.status(403).json({ msg: "User is not authenticated" });
   }
-  console.log("Wtf is happening");
+
   jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403);
+    if (err) {
+      return res.status(403).json({
+        msg: err.message,
+      });
+    }
     req.user = user;
 
     next();

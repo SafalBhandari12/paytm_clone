@@ -1,5 +1,5 @@
 import express, { application } from "express";
-import z, { string } from "zod";
+import z, { promise, string } from "zod";
 import prisma from "../lib/prisma.js";
 import jwt from "jsonwebtoken";
 import { authMiddleware } from "../middleware/authMiddleware.js";
@@ -18,9 +18,27 @@ const signUpSchema = z.object({
     .regex(/[^[a-zA-Z0-9]/),
 });
 
+const patchUpdateSchema = z.object({
+  firstName: z.string().min(3).max(50).optional(),
+  lastName: z.string().min(3).max(50).optional(),
+  userName: z.string().min(3).max(50).optional(),
+  password: z
+    .string()
+    .min(3)
+    .regex(/[A-Z]/, "At least one uppercase")
+    .regex(/[a-z]/, "At least one lowercase")
+    .regex(/[^[a-zA-Z0-9]/)
+    .optional(),
+});
+
 const loginschema = z.object({
   userName: z.string(),
   password: string(),
+});
+
+const batchSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
 });
 
 const router = express.Router();
@@ -53,6 +71,11 @@ router.post("/signUp", async (req, res) => {
         lastName,
         userName,
         password,
+        Balance: {
+          create: {
+            balance: 10000,
+          },
+        },
       },
     });
 
@@ -102,8 +125,59 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.use("/update", authMiddleware, (req, res) => {
+router.patch("/update", authMiddleware, async (req, res) => {
+  const { success, data, error } = patchUpdateSchema.safeParse(req.body);
+  console.log("Reached");
+
+  if (!success) {
+    return res.status(400).json(error);
+  }
+
+  const { firstName, lastName, password } = data;
+
+  console.log(req.user);
+  console.log(typeof req.user);
+  console.log(req.user.userName);
+
+  const queryResult = await prisma.user.update({
+    where: {
+      userName: req.user.userName,
+    },
+    data: {
+      firstName,
+      lastName,
+      password,
+    },
+  });
+
+  console.log(queryResult);
+
   return res.status(200).json({ msg: "Welcome to my website" });
+});
+
+router.get("/batch", async (req, res) => {
+  const { success, error, data } = batchSchema.safeParse(req.query);
+  if (!success) {
+    return res.status(400).json(error);
+  }
+  const usersData = await prisma.user.findMany({
+    where: {
+      firstName: {
+        contains: data.firstName,
+        mode: "insensitive",
+      },
+      lastName: {
+        contains: data.lastName,
+        mode: "insensitive",
+      },
+    },
+    select: {
+      firstName: true,
+      lastName: true,
+      id: true,
+    },
+  });
+  return res.status(200).json(usersData);
 });
 
 export default router;
