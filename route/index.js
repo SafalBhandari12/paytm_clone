@@ -100,7 +100,6 @@ router.post("/login", async (req, res) => {
     }
 
     const { userName, password } = resValidation.data;
-
     const user = await prisma.user.findUnique({
       where: {
         userName: userName,
@@ -155,7 +154,7 @@ router.patch("/update", authMiddleware, async (req, res) => {
   return res.status(200).json({ msg: "Welcome to my website" });
 });
 
-router.get("/batch", async (req, res) => {
+router.get("/batch", authMiddleware, async (req, res) => {
   const { success, error, data } = batchSchema.safeParse(req.query);
   if (!success) {
     return res.status(400).json(error);
