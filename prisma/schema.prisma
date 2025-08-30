@@ -14,12 +14,14 @@ datasource db {
 }
 
 model User {
-  id        String    @id() @default(uuid())
+  id        String       @id() @default(uuid())
   firstName String
-  userName  String    @unique()
+  userName  String       @unique()
   lastName  String
   password  String
   Balance   Balance?
+  sentTx    Transaction[] @relation("SentTransactions")
+  receivedTx Transaction[] @relation("ReceivedTransactions")
 }
 
 model Balance {
@@ -27,4 +29,17 @@ model Balance {
   balance Int
 
   user User @relation(fields: [id], references: [id])
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  amount    Int
+  createdAt DateTime @default(now())
+
+  // relations
+  sender   User @relation("SentTransactions", fields: [senderId], references: [id])
+  senderId String
+
+  receiver   User @relation("ReceivedTransactions", fields: [receiverId], references: [id])
+  receiverId String
 }
