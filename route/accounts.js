@@ -7,7 +7,7 @@ const router = express.Router();
 
 const transferSchema = z.object({
   to: z.string(),
-  amount: z.number(),
+  amount: z.string(),
 });
 
 router.get("/balance", authMiddleware, async (req, res) => {
@@ -33,7 +33,8 @@ router.post("/transfer", authMiddleware, async (req, res) => {
   if (!success) {
     return res.status(400).json(error);
   }
-  const { amount, to } = data;
+  let { amount, to } = data;
+  amount = parseInt(amount);
   const userAmount = await prisma.user.findUnique({
     where: {
       id: req.user.id,
