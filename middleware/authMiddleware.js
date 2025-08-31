@@ -16,6 +16,7 @@ export const authMiddleware = (req, res, next) => {
         msg: err.message,
       });
     }
+    console.log(user);
     req.user = user;
 
     next();

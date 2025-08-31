@@ -36,7 +36,7 @@ router.post("/transfer", authMiddleware, async (req, res) => {
   const { amount, to } = data;
   const userAmount = await prisma.user.findUnique({
     where: {
-      userName: req.user.userName,
+      id: req.user.id,
     },
     select: {
       Balance: {
@@ -52,7 +52,7 @@ router.post("/transfer", authMiddleware, async (req, res) => {
 
   const toUser = await prisma.user.findUnique({
     where: {
-      userName: to,
+      id: to,
     },
   });
 
@@ -63,7 +63,7 @@ router.post("/transfer", authMiddleware, async (req, res) => {
   await prisma.$transaction([
     prisma.user.update({
       where: {
-        userName: req.user.userName,
+        id: req.user.id,
       },
       data: {
         Balance: {
@@ -77,7 +77,7 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     }),
     prisma.user.update({
       where: {
-        userName: to,
+        id: to,
       },
       data: {
         Balance: {
